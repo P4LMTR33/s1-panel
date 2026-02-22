@@ -42,17 +42,30 @@ Multiple display faces are available (ASCII, Arcs, Clocks, Digits, Professional)
 
 ### Installation
 
-**1. Build from source (Recommended)**
+**1. Using Pre-built Binaries (Recommended)**
+
+Download the latest release archive (`firebat-s1-panel-vX.X.X.tar.gz`) from the [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases) page.
+
+```bash
+# Extract the archive
+tar -xzf firebat-s1-panel-v*.tar.gz
+cd firebat-s1-panel-v*
+
+# Install and enable the daemon
+sudo make install
+sudo systemctl enable --now firebat-paneld
+```
+
+> **Note:** Make sure you have the required dependencies installed (e.g., `libusb-1.0-0-dev`), or run the script if provided in future versions.
+
+**2. Build from source (For Developers)**
 
 ```bash
 git clone https://github.com/P4LMTR33/firebat-s1-panel
 cd firebat-s1-panel
+
+# Install Rust and dependencies beforehand
 make build
-```
-
-**2. Install and enable**
-
-```bash
 sudo make install
 sudo systemctl enable --now firebat-paneld
 ```
@@ -117,17 +130,30 @@ Based on work from [ananthb/ht32-panel](https://github.com/ananthb/ht32-panel) a
 
 ### Установка
 
-**1. Сборка из исходников (Рекомендуется)**
+**1. Использование готовых бинарных файлов (Рекомендуется)**
+
+Скачайте архив с последним релизом (`firebat-s1-panel-vX.X.X.tar.gz`) со страницы [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases).
+
+```bash
+# Распакуйте архив
+tar -xzf firebat-s1-panel-v*.tar.gz
+cd firebat-s1-panel-v*
+
+# Установите и запустите службу
+sudo make install
+sudo systemctl enable --now firebat-paneld
+```
+
+> **Примечание:** Убедитесь, что у вас установлены необходимые системные зависимости (например, пакет `libusb-1.0-0-dev` или `libusb-1.0-0`).
+
+**2. Сборка из исходников (Для разработчиков)**
 
 ```bash
 git clone https://github.com/P4LMTR33/firebat-s1-panel
 cd firebat-s1-panel
+
+# Предварительно установите Rust и системные зависимости
 make build
-```
-
-**2. Установка и запуск**
-
-```bash
 sudo make install
 sudo systemctl enable --now firebat-paneld
 ```
