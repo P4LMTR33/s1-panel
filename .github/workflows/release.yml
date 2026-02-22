@@ -5,53 +5,72 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
 
-      - name: Build release artifacts
-        run: nix build .#release
+      - name: Build release
+        run: cargo build --release
+
+      - name: Determine project name and version
+        id: meta
+        run: |
+          PROJECT=$(cargo metadata --no-deps --format-version 1 \
+                    | jq -r '.packages[0].name')
+          VERSION=${GITHUB_REF#refs/tags/}
+          TARGET=x86_64-unknown-linux-gnu
+          ARCHIVE="${PROJECT}-${VERSION}-${TARGET}"
+          echo "PROJECT=${PROJECT}"   >> "$GITHUB_OUTPUT"
+          echo "VERSION=${VERSION}"   >> "$GITHUB_OUTPUT"
+          echo "ARCHIVE=${ARCHIVE}"   >> "$GITHUB_OUTPUT"
+
+      - name: Package release archive
+        run: |
+          DIR=${{ steps.meta.outputs.ARCHIVE }}
+          mkdir -p "${DIR}/target/release"
+
+          # копируем собранные бинарники (исключаем служебные файлы)
+          for bin in target/release/*; do
+            [ -f "$bin" ] && [ -x "$bin" ] \
+              && [[ ! "$bin" =~ \.(d|rlib|rmeta|so)$ ]] \
+              && [[ ! "$(basename "$bin")" == build_script_build ]] \
+              && cp "$bin" "${DIR}/target/release/"
+          done
+
+          # сопроводительные файлы/каталоги (если существуют)
+          [ -d config ]    && cp -r config    "${DIR}/"
+          [ -d deploy ]    && cp -r deploy    "${DIR}/"
+          [ -f Makefile ]  && cp    Makefile   "${DIR}/"
+          [ -f README.md ] && cp    README.md  "${DIR}/"
+          [ -f LICENSE ]   && cp    LICENSE    "${DIR}/"
+
+          tar -czf "${DIR}.tar.gz" "${DIR}"
+          echo "ASSET=${DIR}.tar.gz" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            result/*
+          name: ${{ steps.meta.outputs.PROJECT }} ${{ steps.meta.outputs.VERSION }}
+          files: ${{ env.ASSET }}
           generate_release_notes: true
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Publish ht32-panel-hw
-        run: cargo publish -p ht32-panel-hw --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Wait for crates.io indexing
-        run: sleep 30
-
-      - name: Publish ht32-panel-client
-        run: cargo publish -p ht32-panel-client --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Wait for crates.io indexing
-        run: sleep 30
-
-      - name: Publish ht32-panel-daemon
-        run: cargo publish -p ht32-panel-daemon --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Publish ht32-panel-cli
-        run: cargo publish -p ht32-panel-cli --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Publish ht32-panel-applet
-        run: cargo publish -p ht32-panel-applet --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
