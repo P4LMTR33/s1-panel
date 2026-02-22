@@ -149,6 +149,8 @@ impl Face for ProfessionalFace {
             complications::network(true),
             complications::disk_io(true),
             complications::cpu_temp(true),
+            complications::uptime(true),
+            complications::ram_usage(true),
         ]
     }
 
@@ -247,10 +249,12 @@ impl Face for ProfessionalFace {
             // Two lines lower before Uptime
             y += line_height * 2;
 
-            // Base element: Uptime (always shown)
-            let uptime_text = format!("Up: {}", data.uptime);
-            canvas.draw_text(margin, y, &uptime_text, FONT_SMALL, colors.dim);
-            y += line_height + section_spacing;
+            // Complication: Uptime
+            if is_enabled(complication_names::UPTIME) {
+                let uptime_text = format!("Up: {}", data.uptime);
+                canvas.draw_text(margin, y, &uptime_text, FONT_SMALL, colors.dim);
+                y += line_height + section_spacing;
+            }
 
             // Complication: IP address with label on its own line
             if is_enabled(complication_names::IP_ADDRESS) {
@@ -308,21 +312,23 @@ impl Face for ProfessionalFace {
             );
             y += tall_bar_height as i32 + section_spacing;
 
-            // Base element: RAM label on its own line, then bar below
-            let ram_label = format!("RAM: {:2.0}%", data.ram_percent);
-            canvas.draw_text(margin, y, &ram_label, FONT_SMALL, colors.dim);
-            y += line_height;
-            Self::draw_progress_bar(
-                canvas,
-                margin,
-                y,
-                bar_width,
-                tall_bar_height,
-                data.ram_percent,
-                colors.bar_ram,
-                colors.bar_bg,
-            );
-            y += tall_bar_height as i32 + section_spacing;
+            // Complication: RAM usage
+            if is_enabled(complication_names::RAM_USAGE) {
+                let ram_label = format!("RAM: {:2.0}%", data.ram_percent);
+                canvas.draw_text(margin, y, &ram_label, FONT_SMALL, colors.dim);
+                y += line_height;
+                Self::draw_progress_bar(
+                    canvas,
+                    margin,
+                    y,
+                    bar_width,
+                    tall_bar_height,
+                    data.ram_percent,
+                    colors.bar_ram,
+                    colors.bar_bg,
+                );
+                y += tall_bar_height as i32 + section_spacing;
+            }
 
             // Complication: Disk I/O graph
             if is_enabled(complication_names::DISK_IO) {
@@ -442,10 +448,12 @@ impl Face for ProfessionalFace {
                 }
             }
 
-            // Up: on left side
-            let uptime_text = format!("Up: {}", data.uptime);
-            canvas.draw_text(margin, y, &uptime_text, FONT_SMALL, colors.dim);
-            y += line_height + 1;
+            // Complication: Uptime
+            if is_enabled(complication_names::UPTIME) {
+                let uptime_text = format!("Up: {}", data.uptime);
+                canvas.draw_text(margin, y, &uptime_text, FONT_SMALL, colors.dim);
+                y += line_height + 1;
+            }
 
             // IP: label and address on same line, left aligned
             if is_enabled(complication_names::IP_ADDRESS) {
@@ -485,20 +493,24 @@ impl Face for ProfessionalFace {
             }
             y += line_height + 2;
 
-            // RAM: label and bar on same line
-            let ram_label = format!("RAM: {:2.0}%", data.ram_percent);
-            canvas.draw_text(margin, y, &ram_label, FONT_SMALL, colors.dim);
-            Self::draw_progress_bar(
-                canvas,
-                bar_x,
-                y + 2,
-                bar_width,
-                BAR_HEIGHT,
-                data.ram_percent,
-                colors.bar_ram,
-                colors.bar_bg,
-            );
-            y += line_height + 8;
+            // Complication: RAM usage
+            if is_enabled(complication_names::RAM_USAGE) {
+                let ram_label = format!("RAM: {:2.0}%", data.ram_percent);
+                canvas.draw_text(margin, y, &ram_label, FONT_SMALL, colors.dim);
+                Self::draw_progress_bar(
+                    canvas,
+                    bar_x,
+                    y + 2,
+                    bar_width,
+                    BAR_HEIGHT,
+                    data.ram_percent,
+                    colors.bar_ram,
+                    colors.bar_bg,
+                );
+                y += line_height + 8;
+            } else {
+                y += line_height + 8;
+            }
 
             // DSK: label line, then graph on next line
             if is_enabled(complication_names::DISK_IO) {

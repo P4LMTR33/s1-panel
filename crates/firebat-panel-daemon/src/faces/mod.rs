@@ -90,6 +90,27 @@ impl Theme {
                 text: 0xE0E0FF,      // Brighter foreground
                 background: 0x1A1B26,
             },
+            "blood" | "crimson" => Self {
+                // High contrast dark with bright red accents
+                primary: 0xFF2222,    // Bright red
+                secondary: 0x990000,  // Dark red
+                text: 0xFFEEEE,       // Hint of red white
+                background: 0x0A0000, // Very dark red-black
+            },
+            "cyberpunk" => Self {
+                // Vibrant cyan and magenta on deep violet
+                primary: 0x00FFCC,    // Cyan
+                secondary: 0xFF00FF,  // Magenta
+                text: 0xEEEEFF,       // Bright slightly blue white
+                background: 0x0B0016, // Very dark violet
+            },
+            "dracula" => Self {
+                // Dracula theme
+                primary: 0xFF79C6,    // Pink
+                secondary: 0xBD93F9,  // Purple
+                text: 0xF8F8F2,       // Foreground
+                background: 0x282A36, // Background
+            },
             // Unknown theme - fall back to nord
             _ => Self::from_preset("nord"),
         }
@@ -161,7 +182,18 @@ pub struct ThemeInfo {
 
 /// Returns a list of available theme presets with display names.
 pub fn available_themes() -> Vec<ThemeInfo> {
-    vec![
+        ThemeInfo {
+            id: "blood",
+            display_name: "Blood",
+        },
+        ThemeInfo {
+            id: "cyberpunk",
+            display_name: "Cyberpunk",
+        },
+        ThemeInfo {
+            id: "dracula",
+            display_name: "Dracula",
+        },
         ThemeInfo {
             id: "ember",
             display_name: "Ember",
@@ -333,6 +365,8 @@ pub mod complication_names {
     pub const DISK_IO: &str = "disk_io";
     pub const CPU_TEMP: &str = "cpu_temp";
     pub const IP_ADDRESS: &str = "ip_address";
+    pub const RAM_USAGE: &str = "ram_usage";
+    pub const UPTIME: &str = "uptime";
 }
 
 /// Complication option IDs.
@@ -475,6 +509,26 @@ pub mod complications {
             "hostname",
             "Hostname",
             "Display the system hostname",
+            default_enabled,
+        )
+    }
+
+    /// RAM usage complication.
+    pub fn ram_usage(default_enabled: bool) -> Complication {
+        Complication::new(
+            complication_names::RAM_USAGE,
+            "RAM Usage",
+            "Display RAM usage",
+            default_enabled,
+        )
+    }
+
+    /// Uptime complication.
+    pub fn uptime(default_enabled: bool) -> Complication {
+        Complication::new(
+            complication_names::UPTIME,
+            "Uptime",
+            "Display system uptime",
             default_enabled,
         )
     }
