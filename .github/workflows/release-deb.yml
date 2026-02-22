@@ -1,0 +1,128 @@
+name: Release DEB
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libusb-1.0-0-dev libudev-dev pkg-config fakeroot
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-deb-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deb-
+
+      - name: Build release
+        run: cargo build --release
+
+      # ── Метаданные из Cargo.toml ──────────────────────────────
+      - name: Collect metadata
+        id: meta
+        run: |
+          META=$(cargo metadata --no-deps --format-version 1)
+          PKG=$(echo "$META"  | jq -r '.packages[0].name')
+          DESC=$(echo "$META" | jq -r '.packages[0].description // "Application"')
+          AUTHOR=$(echo "$META" | jq -r '.packages[0].authors[0] // "maintainer@example.com"')
+          URL=$(echo "$META"  | jq -r '.packages[0].repository // .packages[0].homepage // ""')
+
+          VER=${GITHUB_REF#refs/tags/v}   # v0.8.2 → 0.8.2
+          ARCH=amd64
+          DEB="${PKG}_${VER}_${ARCH}.deb"
+
+          {
+            echo "PKG=${PKG}"
+            echo "VER=${VER}"
+            echo "DESC=${DESC}"
+            echo "AUTHOR=${AUTHOR}"
+            echo "URL=${URL}"
+            echo "ARCH=${ARCH}"
+            echo "DEB=${DEB}"
+          } >> "$GITHUB_OUTPUT"
+
+      # ── Сборка дерева пакета ──────────────────────────────────
+      - name: Assemble .deb tree
+        run: |
+          set -euo pipefail
+
+          PKG="${{ steps.meta.outputs.PKG }}"
+          VER="${{ steps.meta.outputs.VER }}"
+          ARCH="${{ steps.meta.outputs.ARCH }}"
+          ROOT="deb-root"
+
+          # --- каталоги ---
+          mkdir -p "${ROOT}/DEBIAN"
+          mkdir -p "${ROOT}/usr/bin"
+          mkdir -p "${ROOT}/etc/${PKG}"
+          mkdir -p "${ROOT}/usr/share/doc/${PKG}"
+
+          # --- бинарники ---
+          for f in target/release/*; do
+            [ -f "$f" ] && [ -x "$f" ] \
+              && [[ ! "$f" =~ \.(d|rlib|rmeta|so)$ ]] \
+              && [[ "$(basename "$f")" != build_script_build ]] \
+              && install -m 755 "$f" "${ROOT}/usr/bin/"
+          done
+
+          # --- конфиги → /etc/<pkg>/ ---
+          if [ -d config ]; then
+            cp -r config/* "${ROOT}/etc/${PKG}/" 2>/dev/null || true
+            find "${ROOT}/etc" -type f \
+              | sed "s|^${ROOT}||" > "${ROOT}/DEBIAN/conffiles"
+          fi
+
+          # --- systemd-юниты из deploy/ ---
+          if compgen -G "deploy/*.service" >/dev/null; then
+            mkdir -p "${ROOT}/lib/systemd/system"
+            cp deploy/*.service "${ROOT}/lib/systemd/system/"
+          fi
+
+          # --- документация ---
+          [ -f README.md ] && cp README.md "${ROOT}/usr/share/doc/${PKG}/"
+          [ -f LICENSE ]   && cp LICENSE   "${ROOT}/usr/share/doc/${PKG}/copyright"
+
+          # --- DEBIAN/control ---
+          {
+            echo "Package: ${PKG}"
+            echo "Version: ${VER}"
+            echo "Architecture: ${ARCH}"
+            echo "Maintainer: ${{ steps.meta.outputs.AUTHOR }}"
+            echo "Depends: libusb-1.0-0, libudev1"
+            echo "Section: utils"
+            echo "Priority: optional"
+            echo "Homepage: ${{ steps.meta.outputs.URL }}"
+            echo "Description: ${{ steps.meta.outputs.DESC }}"
+          } > "${ROOT}/DEBIAN/control"
+
+          # --- собираем .deb ---
+          fakeroot dpkg-deb --build "${ROOT}" \
+            "${{ steps.meta.outputs.DEB }}"
+
+      # ── Публикация ────────────────────────────────────────────
+      - name: Upload .deb to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.meta.outputs.DEB }}
