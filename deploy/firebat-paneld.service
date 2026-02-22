@@ -3,37 +3,31 @@ Description=Firebat Panel Daemon - LCD and LED control for Firebat S1 / AceMagic
 Documentation=https://github.com/P4LMTR33/firebat-s1-panel
 After=network.target dbus.service
 Wants=dbus.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
+User=root
+Group=root
 ExecStart=/usr/local/bin/firebat-paneld
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=5
 
 # Logging
 SyslogIdentifier=firebat-paneld
 StandardOutput=journal
 StandardError=journal
 
-# State directory (creates /var/lib/firebat-panel)
+# State directory
 StateDirectory=firebat-panel
 
-# Security hardening
-ProtectSystem=strict
-ProtectHome=yes
-ReadWritePaths=/var/lib/firebat-panel
-PrivateTmp=yes
-NoNewPrivileges=yes
-ProtectKernelModules=yes
-ProtectKernelTunables=yes
-ProtectControlGroups=yes
-
-# We need access to USB devices and /sys for sensors
-DeviceAllow=/dev/ttyUSB* rw
-DeviceAllow=/dev/hidraw* rw
-SupplementaryGroups=plugdev dialout
+# Minimal security to ensure hardware access
+ProtectSystem=no
+ProtectHome=no
+PrivateTmp=no
+# No restrictive device policies
+DevicePolicy=auto
 
 [Install]
 WantedBy=multi-user.target
