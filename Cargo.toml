@@ -1,11 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/ht32-panel-hw",
-    "crates/ht32-panel-daemon",
-    "crates/ht32-panel-cli",
-    "crates/ht32-panel-applet",
-    "crates/ht32-panel-client",
+    "crates/firebat-panel-hw",
+    "crates/firebat-panel-daemon",
+    "crates/firebat-panel-cli",
+    "crates/firebat-panel-client",
 ]
 
 [workspace.package]
@@ -13,12 +12,12 @@ version = "0.8.0"
 edition = "2021"
 license = "AGPL-3.0-or-later"
 authors = ["Ananth Bhaskararaman <ab@calculon.tech>"]
-repository = "https://github.com/ananthb/ht32-panel"
+repository = "https://github.com/ananthb/firebat-panel"
 
 [workspace.dependencies]
 # Internal crates
-ht32-panel-hw = { version = "0.8.0", path = "crates/ht32-panel-hw" }
-ht32-panel-client = { version = "0.8.0", path = "crates/ht32-panel-client" }
+firebat-panel-hw = { version = "0.8.0", path = "crates/firebat-panel-hw" }
+firebat-panel-client = { version = "0.8.0", path = "crates/firebat-panel-client" }
 
 # Hardware
 # Use libusb backend on Linux to match reference implementation

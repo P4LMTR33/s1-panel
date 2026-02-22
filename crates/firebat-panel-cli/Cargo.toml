@@ -1,0 +1,22 @@
+[package]
+name = "firebat-panel-cli"
+description = "CLI control tool for Firebat Panel daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[[bin]]
+name = "firebat-panelctl"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+firebat-panel-client = { workspace = true }

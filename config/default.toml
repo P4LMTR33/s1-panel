@@ -1,11 +1,16 @@
-# HT32 Panel Daemon Configuration
+# Firebat Panel Daemon Configuration
 
 # Web Server Configuration
 [web]
-# Enable the web server (disabled by default)
-enable = false
-# Server listen address
-listen = "[::1]:8686"
+# Enable the web server
+enable = true
+# Server listen address (0.0.0.0 for external access)
+listen = "0.0.0.0:8686"
+
+# D-Bus Configuration
+[dbus]
+# Bus type: "system", "session", or "auto"
+bus = "system"
 
 # Display refresh interval (milliseconds, 500-10000)
 refresh_interval = 2500
@@ -17,10 +22,21 @@ heartbeat = 1000
 [devices]
 # LCD device path or "auto" for auto-detection by VID:PID
 lcd = "auto"
+# USB HID VID:PID for the LCD display (hex, defaults shown)
+# lcd_vid = 0x04D9
+# lcd_pid = 0xFD01
 # Serial port path for LED controller (CH340)
 led = "/dev/ttyUSB0"
-# Note: LED theme, intensity, and speed are stored in the state directory.
-# Use `ht32panelctl led set <theme>` to change them.
+
+# Sensor Configuration
+[sensors]
+# Network interface to monitor ("auto" for auto-detection)
+network_interface = "auto"
+# CPU temperature sensor path ("auto" for auto-detection)
+# Example: "/sys/class/hwmon/hwmon1/temp1_input"
+temp_sensor_path = "auto"
+# Disks to monitor (leave empty for auto-detection of root disk)
+# disks = ["/", "/mnt/data"]
 
 # Canvas Configuration
 [canvas]

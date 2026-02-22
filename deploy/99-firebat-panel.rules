@@ -1,0 +1,15 @@
+# Firebat Panel - udev rules for USB HID LCD display and CH340 LED controller
+#
+# Install to: /etc/udev/rules.d/99-firebat-panel.rules
+# Reload with: udevadm control --reload-rules && udevadm trigger
+
+# LCD Display (HID device: VID=04D9 PID=FD01)
+# Grant permissions and restart daemon on connect
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="fd01", \
+    MODE="0660", GROUP="plugdev", \
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="firebat-paneld.service"
+
+# CH340 USB-to-Serial for LED controller
+# Grant permissions to ttyUSB devices from CH340 chipset
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", \
+    MODE="0660", GROUP="dialout", SYMLINK+="firebat-led"

@@ -1,180 +1,102 @@
-# HT32 Panel
+# Firebat Panel
 
-[![Release](https://github.com/ananthb/ht32-panel/actions/workflows/release.yml/badge.svg)](https://github.com/ananthb/ht32-panel/actions/workflows/release.yml)
+Front-panel LCD display and LED control daemon for **Firebat S1 / AceMagic S1** mini PCs.  
+Designed for headless servers: **Proxmox VE**, **Debian**, **Ubuntu Server**.
 
-![Panel Face](https://raw.githubusercontent.com/ananthb/ht32-panel/main/images/ht32-panel-ascii-landscape.png)
-
-Front-panel display and LED control for mini PCs with HT32-based LCD and RGB LEDs ([Skullsaints Agni](https://www.electroniksindia.com/products/agni-by-skullsaints-mini-pc-intel-twin-lake-n150-vibrant-lcd-screen-m-2-ssd-mini-tower-with-rgb-lights-wifi-6-4k-uhd-dual-lan-for-home-and-office), [AceMagic S1](https://acemagic.com/products/acemagic-s1-12th-alder-laker-n95-mini-pc), etc.).
-
-## Faces
-
-### Landscape
-
-| ASCII | Arcs | Clocks |
-|-------|------|--------|
-| ![ASCII](images/ht32-panel-ascii-landscape.png) | ![Arcs](images/ht32-panel-arcs-landscape.png) | ![Clocks](images/ht32-panel-clocks-landscape.png) |
-
-| Digits | Professional |
-|--------|--------------|
-| ![Digits](images/ht32-panel-digits-landscape.png) | ![Professional](images/ht32-panel-professional-landscape.png) |
-
-### Portrait
-
-| Arcs | Clocks | Digits |
-|------|--------|--------|
-| ![Arcs](images/ht32-panel-arcs-portrait.png) | ![Clocks](images/ht32-panel-clocks-portrait.png) | ![Digits](images/ht32-panel-digits-portrait.png) |
-
-| ASCII | Professional |
-|-------|--------------|
-| ![ASCII](images/ht32-panel-ascii-portrait.png) | ![Professional](images/ht32-panel-professional-portrait.png) |
-
-### Themes
-
-Faces support color themes: Ember, Hacker, Nord, Solarized Dark, Solarized Light, and Tokyo Night.
-
-### Complications
-
-Complications are optional display elements: Time, Date, IP Address, Network activity, Disk I/O, CPU Temperature, and Hostname.
+> Forked from [ananthb/ht32-panel](https://github.com/ananthb/ht32-panel) and adapted for production headless use.
 
 ## Features
 
-- **Daemon** (`ht32paneld`): D-Bus service with HTMX web UI
-- **CLI** (`ht32panelctl`): D-Bus client for daemon control
-- **Applet**: System tray for GNOME/KDE
-- **Web UI**: Monitor and control the panel from a browser
+- **Daemon** (`firebat-paneld`): systemd service with HTMX web UI and D-Bus interface
+- **CLI** (`firebat-panelctl`): command-line tool for daemon control
+- **Web UI**: monitor and control the panel from any browser
+- **Configurable**: network interface, disks, temperature sensor, VID/PID — all in `/etc/firebat-panel/config.toml`
 
 ## Hardware
 
 | Component | Interface | Details |
 |-----------|-----------|---------|
-| LCD Display | USB HID | VID:PID 04D9:FD01, 320x170 RGB565 |
+| LCD Display | USB HID | VID:PID 04D9:FD01, 320×170 RGB565 |
 | LED Strip | Serial | CH340, 10000 baud |
 
 ## Installation
 
-Download the latest release from [GitHub Releases](https://github.com/ananthb/ht32-panel/releases).
-
-### AppImage
+### From Source (Recommended)
 
 ```bash
-chmod +x ht32-panel-*-x86_64.AppImage
-./ht32-panel-*-x86_64.AppImage
+git clone https://github.com/P4LMTR33/firebat-s1-panel
+cd firebat-s1-panel
+make build
+sudo make install
+sudo systemctl enable --now firebat-paneld
 ```
 
-### Linux Binary
+### Manual Binary
 
 ```bash
-tar -xzf ht32-panel-*-x86_64-linux.tar.gz
-./ht32paneld config/default.toml
-```
-
-### NixOS (System Service)
-
-```nix
-{
-  inputs.ht32-panel.url = "github:ananthb/ht32-panel";
-}
-```
-
-```nix
-{ inputs, ... }:
-{
-  imports = [ inputs.ht32-panel.nixosModules.default ];
-
-  services.ht32-panel = {
-    enable = true;
-  };
-}
-```
-
-### Home Manager (User Service)
-
-Run the daemon as a user service with the session D-Bus bus.
-
-Add the input to your flake:
-
-```nix
-{
-  inputs.ht32-panel.url = "github:ananthb/ht32-panel";
-}
-```
-
-In your Home Manager configuration:
-
-```nix
-{ inputs, ... }:
-{
-  imports = [ inputs.ht32-panel.homeManagerModules.default ];
-
-  services.ht32-panel = {
-    enable = true;
-    applet.enable = true;  # optional system tray applet
-  };
-}
-```
-
-For hardware access, also add to your NixOS configuration:
-
-```nix
-{ inputs, ... }:
-{
-  imports = [ inputs.ht32-panel.nixosModules.udevRules ];
-
-  services.ht32-panel.udevRules = {
-    enable = true;
-    group = "users";  # grant access to users group
-  };
-}
-```
-
-### Nix
-
-```bash
-nix run github:ananthb/ht32-panel
-```
-
-### From Source
-
-```bash
-git clone https://github.com/ananthb/ht32-panel
-cd ht32-panel
 cargo build --release
+sudo install -m755 target/release/firebat-paneld /usr/local/bin/
+sudo install -m755 target/release/firebat-panelctl /usr/local/bin/
+sudo mkdir -p /etc/firebat-panel
+sudo cp config/default.toml /etc/firebat-panel/config.toml
+sudo cp deploy/firebat-paneld.service /etc/systemd/system/
+sudo cp deploy/dbus-org.firebat.Panel.conf /etc/dbus-1/system.d/
+sudo cp deploy/99-firebat-panel.rules /etc/udev/rules.d/
+sudo systemctl daemon-reload
+sudo udevadm control --reload-rules
+sudo systemctl enable --now firebat-paneld
+```
+
+## Configuration
+
+Edit `/etc/firebat-panel/config.toml`:
+
+```toml
+[web]
+enable = true
+listen = "0.0.0.0:8686"
+
+[dbus]
+bus = "system"
+
+[devices]
+lcd = "auto"
+led = "/dev/ttyUSB0"
+
+[sensors]
+network_interface = "vmbr0"   # or "auto"
+temp_sensor_path = "auto"
+# disks = ["/", "/mnt/data"]
 ```
 
 ## Usage
 
 ```bash
-# Start daemon
-ht32paneld config/default.toml
+# View logs
+journalctl -fu firebat-paneld
 
-# CLI (requires daemon)
-ht32panelctl lcd orientation landscape
-ht32panelctl led set rainbow --intensity 3 --speed 3
+# CLI control (requires running daemon)
+firebat-panelctl lcd orientation landscape
+firebat-panelctl led set rainbow --intensity 3 --speed 3
+firebat-panelctl lcd face professional
+firebat-panelctl theme set nord
+firebat-panelctl screenshot
 ```
-
-## Web UI
-
-The daemon includes a web UI for monitoring and controlling the panel.
-
-![ht32-panel-web-ui](https://raw.githubusercontent.com/ananthb/ht32-panel/main/images/ht32-panel-web-ui.png)
-
-To enable the web UI, set `web.enable = true` in the config file.
 
 ## D-Bus
 
-The daemon exposes `org.ht32panel.Daemon1`. By default:
-- **NixOS module**: Uses the system bus
-- **Home Manager module**: Uses the session bus
+The daemon registers `org.firebat.Panel` on the **system bus** by default.
 
-Configure with `services.ht32-panel.dbus.bus` (`"system"`, `"session"`, or `"auto"`).
+## Faces & Themes
+
+Multiple display faces (ASCII, Arcs, Clocks, Digits, Professional) with color themes (Ember, Hacker, Nord, Solarized Dark/Light, Tokyo Night).
+
+Complications: Time, Date, IP Address, Network, Disk I/O, CPU Temperature, Hostname.
 
 ## Acknowledgement
 
-My thanks for the ideas and source code from [github.com/tjaworski/AceMagic-S1-LED-TFT-Linux](https://github.com/tjaworski/AceMagic-S1-LED-TFT-Linux/commit/2971f2b0703bd3170a3f714867652f7e085ec447).
+Based on work from [ananthb/ht32-panel](https://github.com/ananthb/ht32-panel) and [tjaworski/AceMagic-S1-LED-TFT-Linux](https://github.com/tjaworski/AceMagic-S1-LED-TFT-Linux).
 
 ## License
 
-ht32-panel is licensed under the terms of the AGPL license.
-See [LICENSE](LICENSE) for the full license text.
-
-Copyright &#169; Ananth Bhaskararaman 2026
+Licensed under AGPL. See [LICENSE](LICENSE).
