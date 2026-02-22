@@ -42,23 +42,34 @@ Multiple display faces are available (ASCII, Arcs, Clocks, Digits, Professional)
 
 ### Installation
 
-**1. Using Pre-built Binaries (Recommended)**
+**1. Using Debian Package (Recommended for Proxmox/Debian/Ubuntu)**
 
-Download the latest release archive (`firebat-s1-panel-vX.X.X.tar.gz`) from the [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases) page.
+Download the latest `.deb` package from the [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases) page.
+
+```bash
+# Install the package
+sudo apt install ./firebat-panel_*.deb
+```
+
+The service will be automatically started and enabled.
+
+**2. Using Pre-built Binaries (Manual Installation)**
+
+Download the `.tar.gz` archive from the [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases) page.
 
 ```bash
 # Extract the archive
 tar -xzf firebat-s1-panel-v*.tar.gz
 cd firebat-s1-panel-v*
 
-# Install and enable the daemon
+# Install manually
 sudo make install
 sudo systemctl enable --now firebat-paneld
 ```
 
-> **Note:** Make sure you have the required dependencies installed (e.g., `libusb-1.0-0-dev`), or run the script if provided in future versions.
+> **Note:** Manual installation requires `libusb-1.0-0` to be installed on your system.
 
-**2. Build from source (For Developers)**
+**3. Build from source (For Developers)**
 
 ```bash
 git clone https://github.com/P4LMTR33/firebat-s1-panel
@@ -130,23 +141,34 @@ Based on work from [ananthb/ht32-panel](https://github.com/ananthb/ht32-panel) a
 
 ### Установка
 
-**1. Использование готовых бинарных файлов (Рекомендуется)**
+**1. Установка через .deb пакет (Рекомендуется для Proxmox/Debian/Ubuntu)**
 
-Скачайте архив с последним релизом (`firebat-s1-panel-vX.X.X.tar.gz`) со страницы [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases).
+Скачайте последний `.deb` пакет со страницы [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases).
+
+```bash
+# Установите пакет
+sudo apt install ./firebat-panel_*.deb
+```
+
+Служба будет автоматически установлена, добавлена в автозапуск и запущена.
+
+**2. Использование готовых бинарных файлов (Ручная установка)**
+
+Скачайте `.tar.gz` архив со страницы [Releases](https://github.com/P4LMTR33/firebat-s1-panel/releases).
 
 ```bash
 # Распакуйте архив
 tar -xzf firebat-s1-panel-v*.tar.gz
 cd firebat-s1-panel-v*
 
-# Установите и запустите службу
+# Установите вручную
 sudo make install
 sudo systemctl enable --now firebat-paneld
 ```
 
-> **Примечание:** Убедитесь, что у вас установлены необходимые системные зависимости (например, пакет `libusb-1.0-0-dev` или `libusb-1.0-0`).
+> **Примечание:** Для работы требуются установленные системные библиотеки (минимум `libusb-1.0-0`).
 
-**2. Сборка из исходников (Для разработчиков)**
+**3. Сборка из исходников (Для разработчиков)**
 
 ```bash
 git clone https://github.com/P4LMTR33/firebat-s1-panel
