@@ -24,12 +24,20 @@ Designed for headless servers: **Proxmox VE**, **Debian**, **Ubuntu Server**.
 
 Multiple display faces are available (ASCII, Arcs, Clocks, Digits, Professional) along with various color themes (Ember, Hacker, Nord, Solarized Dark/Light, Tokyo Night).
 
-*Screenshot placeholders:*
+*Screenshot:*
 
 <!-- Add your theme screenshots here -->
 <p align="center">
-  <img src="https://placehold.co/320x170?text=Theme+1" width="320"/>
-  <img src="https://placehold.co/320x170?text=Theme+2" width="320"/>
+  <img width="320" height="170" alt="image" src="https://github.com/user-attachments/assets/f3ad4db6-74b9-4240-8202-003fe54547b0" />
+  <img width="320" height="170" alt="image" src="https://github.com/user-attachments/assets/dd2962e0-5389-4e95-81e7-e4e75a0d89c5" />
+  <img width="320" height="170" alt="image" src="https://github.com/user-attachments/assets/44b80cbc-972c-4348-b13f-5e151633de95" />
+</p>
+
+<p align="center">
+  <img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/f9629fd4-eb4b-48ae-8111-8d58dc624a1d" />
+  <img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/2e202f62-382c-4a1e-80a7-116a63ed3e79" />
+  <img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/dd3925b5-f6db-4f78-9b6e-03fe378c378f" />
+
 </p>
 
 ### Installation
