@@ -717,7 +717,7 @@ checksum = "8591b0bcc8a98a64310a2fae1bb3e9b8564dd10e381e6e28010fde8e8e8568db"
 
 [[package]]
 name = "firebat-panel-cli"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -730,7 +730,7 @@ dependencies = [
 
 [[package]]
 name = "firebat-panel-client"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "anyhow",
  "tracing",
@@ -739,7 +739,7 @@ dependencies = [
 
 [[package]]
 name = "firebat-panel-daemon"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "anyhow",
  "askama",
@@ -766,7 +766,7 @@ dependencies = [
 
 [[package]]
 name = "firebat-panel-hw"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "hidapi",
  "thiserror 1.0.69",
