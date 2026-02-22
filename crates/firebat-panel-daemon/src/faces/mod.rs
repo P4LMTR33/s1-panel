@@ -182,6 +182,7 @@ pub struct ThemeInfo {
 
 /// Returns a list of available theme presets with display names.
 pub fn available_themes() -> Vec<ThemeInfo> {
+    vec![
         ThemeInfo {
             id: "blood",
             display_name: "Blood",
