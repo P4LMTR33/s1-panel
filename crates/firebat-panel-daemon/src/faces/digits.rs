@@ -290,6 +290,9 @@ impl Face for DigitsFace {
             Self::draw_divider(canvas, y, width, margin, colors.divider);
             y += 6;
 
+            let bottom_y = y; // Save Y position for right column
+
+            // --- Left Column ---
             // Uptime (always shown)
             canvas.draw_text(
                 margin,
@@ -308,6 +311,29 @@ impl Face for DigitsFace {
                     y += canvas.line_height(FONT_SMALL);
                     // IP address on next line, smaller font to fit
                     canvas.draw_text(margin, y, ip, FONT_SMALL, colors.label);
+                }
+            }
+
+            // --- Right Column ---
+            let mut right_y = bottom_y;
+            if is_on(complication_names::CPU_TEMP) {
+                if let Some(temp) = data.cpu_temp {
+                    let temp_val = format!("{:.0}°C", temp);
+                    let temp_w = canvas.text_width(&temp_val, FONT_LARGE);
+                    
+                    // Draw TEMP label right-aligned
+                    let lbl_w = canvas.text_width("TEMP", FONT_SMALL);
+                    canvas.draw_text(width as i32 - margin - lbl_w, right_y, "TEMP", FONT_SMALL, colors.label);
+                    right_y += canvas.line_height(FONT_SMALL) + 6;
+                    
+                    // Draw temperature value right-aligned
+                    canvas.draw_text(
+                        width as i32 - margin - temp_w,
+                        right_y,
+                        &temp_val,
+                        FONT_LARGE,
+                        colors.segment_on,
+                    );
                 }
             }
         } else {
