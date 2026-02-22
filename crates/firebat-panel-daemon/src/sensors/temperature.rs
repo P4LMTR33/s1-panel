@@ -31,30 +31,37 @@ impl TemperatureSensor {
         }
     }
 
-    /// Detects the best temperature sensor path.
-    /// Prefers CPU-specific sensors over generic thermal zones.
     fn detect_temp_path() -> Option<PathBuf> {
-        // Try hwmon first - look for CPU-related sensors
-        // Common labels: "coretemp", "k10temp", "cpu_thermal"
+        let mut candidates_tier1 = Vec::new(); // CPU specific: coretemp, k10temp, zenpower, x86_pkg_temp
+        let mut candidates_tier2 = Vec::new(); // Generic: cpu_thermal, acpitz
+        let mut candidates_tier3 = Vec::new(); // Thermal zones
+
+        // Try hwmon first
         if let Ok(entries) = fs::read_dir("/sys/class/hwmon") {
             for entry in entries.flatten() {
                 let hwmon_path = entry.path();
-
-                // Check the name of this hwmon device
                 let name_path = hwmon_path.join("name");
+                
                 if let Ok(name) = fs::read_to_string(&name_path) {
                     let name = name.trim();
-                    // CPU temperature sensors
-                    if name == "coretemp"
-                        || name == "k10temp"
-                        || name == "zenpower"
-                        || name == "cpu_thermal"
-                        || name == "acpitz"
-                    {
-                        // Find temp1_input (primary temperature)
-                        let temp_path = hwmon_path.join("temp1_input");
-                        if temp_path.exists() {
-                            return Some(temp_path);
+                    
+                    let tier = match name {
+                        "coretemp" | "k10temp" | "zenpower" | "x86_pkg_temp" => Some(1),
+                        "cpu_thermal" | "acpitz" => Some(2),
+                        _ => None,
+                    };
+
+                    if let Some(t) = tier {
+                        // Check inputs 1 through 5
+                        for i in 1..=5 {
+                            let temp_path = hwmon_path.join(format!("temp{}_input", i));
+                            if temp_path.exists() {
+                                if t == 1 {
+                                    candidates_tier1.push(temp_path);
+                                } else {
+                                    candidates_tier2.push(temp_path);
+                                }
+                            }
                         }
                     }
                 }
@@ -65,7 +72,6 @@ impl TemperatureSensor {
         for i in 0..10 {
             let zone_path = PathBuf::from(format!("/sys/class/thermal/thermal_zone{}", i));
             if zone_path.exists() {
-                // Check the type to prefer CPU zones
                 let type_path = zone_path.join("type");
                 if let Ok(zone_type) = fs::read_to_string(&type_path) {
                     let zone_type = zone_type.trim().to_lowercase();
@@ -76,7 +82,7 @@ impl TemperatureSensor {
                     {
                         let temp_path = zone_path.join("temp");
                         if temp_path.exists() {
-                            return Some(temp_path);
+                            candidates_tier3.push(temp_path.clone());
                         }
                     }
                 }
@@ -85,8 +91,25 @@ impl TemperatureSensor {
 
         // Last resort: just use thermal_zone0 if it exists
         let zone0_temp = PathBuf::from("/sys/class/thermal/thermal_zone0/temp");
-        if zone0_temp.exists() {
-            return Some(zone0_temp);
+        if zone0_temp.exists() && !candidates_tier3.contains(&zone0_temp) {
+            candidates_tier3.push(zone0_temp);
+        }
+
+        // Verify the candidate actually works before selecting it
+        for path in candidates_tier1
+            .into_iter()
+            .chain(candidates_tier2)
+            .chain(candidates_tier3)
+        {
+            if let Ok(content) = fs::read_to_string(&path) {
+                if let Ok(temp) = content.trim().parse::<f64>() {
+                    // Check if it's a valid reading (millidegrees)
+                    // Anything > 0C and < 150C is considered valid for CPU
+                    if temp > 0.0 && temp < 150000.0 {
+                        return Some(path);
+                    }
+                }
+            }
         }
 
         None
